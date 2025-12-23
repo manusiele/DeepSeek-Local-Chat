@@ -93,24 +93,63 @@ Keep this window open.
 
 Simply open `chatbot.html` in your browser and start chatting!
 
-## 🎓 Learning Resources
+## 🎓 Understanding llama.cpp
 
-### Understanding the Components
+### What is llama.cpp?
 
-**llama.cpp**
-- Open-source C++ implementation for running LLMs
-- Efficient inference on consumer hardware
-- Supports various quantized model formats (GGUF)
+[**llama.cpp**](https://github.com/ggerganov/llama.cpp) is a C++ implementation of LLaMA inference with incredible optimization for consumer hardware. It's the backbone of this project.
 
-**DeepSeek Model**
-- 7B parameter language model
-- Quantized for efficient local execution
-- Uncensored version for learning purposes
+**Key Features:**
+- ⚡ **Ultra-fast inference** - Optimized C++ implementation
+- 🎯 **CPU-friendly** - Runs efficiently on consumer CPUs
+- 📊 **GPU acceleration** - Optional NVIDIA/AMD GPU support
+- 💾 **Quantization support** - GGUF format for reduced memory usage
+- 🔄 **HTTP server** - Built-in REST API via `llama-server`
+- 🧵 **Multi-threaded** - Configurable CPU thread usage
+- 🎮 **Context management** - Adjustable context windows up to 131,072 tokens
+
+### llama-server API
+
+This project uses `llama-server.exe` which provides:
+
+**Completion Endpoint** (`POST /completion`)
+```json
+{
+  "prompt": "Your message",
+  "n_predict": 512,
+  "temperature": 0.7,
+  "top_p": 0.9,
+  "repeat_penalty": 1.1,
+  "top_k": 40
+}
+```
+
+**Key Parameters:**
+- `n_predict` - Maximum tokens to generate
+- `temperature` - Randomness (0.0=deterministic, 1.0=creative)
+- `top_p` - Nucleus sampling (0.0-1.0)
+- `top_k` - Keep top K most likely tokens
+- `repeat_penalty` - Prevent repetition
+
+### Components Overview
+
+**llama.cpp Infrastructure**
+- Open-source C++ implementation for running LLMs locally
+- Efficient inference engine optimized for consumer hardware
+- Supports GGUF quantized model format for reduced memory footprint
+- HTTP server mode for easy integration with web interfaces
+
+**DeepSeek-R1 Model**
+- 7B parameter language model from DeepSeek
+- Quantized to Q5_K_S (5-bit quantization for balance of quality/speed)
+- Uncensored version for unrestricted learning and experimentation
+- ~5GB disk space after quantization
 
 **Web Interface**
-- Pure HTML/CSS/JavaScript - no frameworks
-- Direct API communication with local server
-- Foundation for building RAG features
+- Pure HTML/CSS/JavaScript (no heavy frameworks)
+- Direct HTTP API communication with llama-server
+- Real-time streaming responses
+- Foundation for RAG implementation
 
 ### Next Steps for RAG Implementation
 
@@ -135,6 +174,62 @@ To extend this into a full RAG system, you can:
    - Upload and manage documents
    - View indexed content
    - Search your knowledge base
+
+## 🛠️ Advanced Configuration
+
+### Performance Optimization
+
+The `details.txt` file includes multiple configuration profiles:
+
+**For Fast Modern CPUs (8+ cores)**
+```cmd
+llama-server.exe -m "..\model.gguf" -c 8192 -t 8 -b 1024 --mlock -ub 8192 -n 2048
+```
+- `-c 8192` - Context window (supports up to 131,072 for this model)
+- `-t 8` - Use 8 CPU threads
+- `-b 1024` - Large batch size for faster processing
+- `--mlock` - Lock model in RAM (prevents disk swapping)
+- `-ub 8192` - User batch size for multiple requests
+- `-n 2048` - Predict tokens in advance
+
+**For GPU Acceleration (NVIDIA)**
+```cmd
+llama-server.exe -m "..\model.gguf" -c 8192 -t 6 -b 512 -ngl 35 --mlock
+```
+- `-ngl 35` - Offload 35 layers to GPU (adjust based on VRAM)
+- Can achieve 50-100+ tokens/second
+
+**For Slower PCs**
+```cmd
+llama-server.exe -m "..\model.gguf" -c 4096 -t 3 -b 256 --mlock --no-mmap
+```
+- Reduced context window and batch size
+- More stable on limited hardware
+
+### Customizing AI Behavior
+
+Edit parameters in `chatbot.html`:
+
+```javascript
+const response = await fetch('http://localhost:8080/completion', {
+  method: 'POST',
+  body: JSON.stringify({
+    prompt: userMessage,
+    n_predict: 512,        // Response length
+    temperature: 0.7,      // Creativity (0.0 = focused, 1.0 = creative)
+    top_p: 0.9,           // Diversity of responses (0.0-1.0)
+    top_k: 40,            // Keep top K tokens
+    repeat_penalty: 1.1   // Prevent repetition
+  })
+});
+```
+
+**Parameter Guide:**
+- `n_predict`: Higher = longer responses (uses more tokens)
+- `temperature`: 0.0-0.3 for factual answers, 0.7-1.0 for creative content
+- `top_p`: Lower = more focused, Higher = more diverse
+- `top_k`: Lower = more deterministic, Higher = more random
+- `repeat_penalty`: 1.0 = no penalty, >1.0 = discourage repetition
 
 ## 🛠️ Customization
 
