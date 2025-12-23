@@ -1,2 +1,84 @@
-cd C:\Users\manus\Downloads\DeepSeek-Local-Chat\llama
+Type the code below to run the server
+
+cd C:\DeepSeek-Local-Chat\llama
 llama-server.exe -m "..\DeepSeek-R1-Distill-Qwen-7B-Uncensored.i1-Q5_K_S.gguf" --port 8080
+
+
+........................<TO MAKE THE LLM FASTER>...................................
+Edit Your Batch File for Maximum Speed
+Open deepseek.bat with Notepad:
+powershellnotepad deepseek.bat
+Replace everything with this optimized configuration:
+batch@echo off
+llama-server.exe -m "..\DeepSeek-R1-Distill-Qwen-7B-Uncensored.i1-Q5_K_S.gguf" -c 8192 -t 6 -b 512 --mlock --numa isolate
+pause
+What These Parameters Do:
+
+-c 8192 = Larger context window (use more RAM for better performance)
+-t 6 = Use 6 CPU threads (adjust based on your CPU cores - use 4-8 for best results)
+-b 512 = Larger batch size for faster processing
+--mlock = Lock model in RAM to prevent swapping (keeps it fast)
+--numa isolate = Better CPU optimization
+
+If You Have a GPU (NVIDIA)
+If you have an NVIDIA GPU, this will be MUCH faster:
+batch@echo off
+llama-server.exe -m "..\DeepSeek-R1-Distill-Qwen-7B-Uncensored.i1-Q5_K_S.gguf" -c 8192 -t 6 -b 512 -ngl 35 --mlock
+pause
+
+-ngl 35 = Offload 35 layers to GPU (adjust based on your GPU VRAM)
+
+Find Your Optimal Settings
+Check your CPU cores:
+powershellecho $env:NUMBER_OF_PROCESSORS
+Use 50-75% of that number for -t parameter.
+Expected Speed Improvements:
+
+Default settings: 5-15 tokens/second
+Optimized CPU: 15-30 tokens/second
+With GPU: 50-100+ tokens/second
+
+
+........................................<IF YOU HAVE A SLOWER PC>........................................
+
+Open deepseek.bat with Notepad:
+
+powershellnotepad deepseek.bat
+
+Delete everything in it and paste this:
+
+batch@echo off
+llama-server.exe -m "..\DeepSeek-R1-Distill-Qwen-7B-Uncensored.i1-Q5_K_S.gguf" -c 4096
+pause
+
+Save and close Notepad
+Run the batch file:
+
+powershell.\deepseek.bat
+
+........................................<FOR MY PC >.....................................
+
+batch@echo off
+llama-server.exe -m "..\DeepSeek-R1-Distill-Qwen-7B-Uncensored.i1-Q5_K_S.gguf" -c 4096 -t 3 -b 256 --mlock --no-mmap
+pause
+Changes:
+
+-c 4096 = Reduced context (was using too much RAM)
+-t 3 = Use 3 threads instead of all 4 (leave 1 core for system)
+-b 256 = Smaller batch size (more stable)
+--no-mmap = Load fully into RAM (faster access)
+
+............................................<Optimized Configuration for Speed>..........................................
+Edit your deepseek.bat file with these settings:
+
+batch
+@echo off
+llama-server.exe -m "..\DeepSeek-R1-Distill-Qwen-7B-Uncensored.i1-Q5_K_S.gguf" -c 8192 -t 8 -b 1024 --mlock -ub 8192 -n 2048
+pause
+What These Parameters Do:
+-c 8192 = Context window (your model supports up to 131,072, but 8192 is a good balance for speed)
+-t 8 = Use 8 CPU threads (your CPU likely has 8+ threads)
+-b 1024 = Larger batch size for faster processing
+--mlock = Locks model in RAM (prevents swapping to disk)
+-ub 8192 = User batch size (optimizes for multiple requests)
+-n 2048 = Predict tokens in advance (faster responses)
